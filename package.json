@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:deploy": "prisma migrate deploy",
+    "db:deploy:http": "tsx scripts/apply-migrations-http.ts",
     "db:seed": "tsx prisma/seed.ts",
     "db:export": "tsx scripts/export-sqlite.ts",
     "db:import": "tsx scripts/import-postgres.ts",
@@ -16,6 +17,8 @@
     "ai:cluster": "tsx scripts/run-clustering.ts"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "@prisma/adapter-neon": "^7.10.0",
     "@prisma/adapter-pg": "7.9.1",
     "@prisma/client": "7.9.1",
     "bcryptjs": "^3.0.3",
@@ -24,7 +27,8 @@
     "prisma": "7.9.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "@prisma/adapter-better-sqlite3": "^7.9.1",
@@ -34,6 +38,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/ws": "^8.18.1",
     "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",

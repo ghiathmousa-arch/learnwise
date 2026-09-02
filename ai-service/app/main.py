@@ -22,7 +22,6 @@ import numpy as np
 import onnxruntime as ort
 from fastapi import FastAPI
 from pydantic import BaseModel
-from sklearn.cluster import KMeans
 from tokenizers import Tokenizer
 
 MODEL_DIR = Path(__file__).resolve().parent.parent / "models" / "paraphrase-multilingual-MiniLM-L12-v2"
@@ -118,6 +117,11 @@ class ClusterResponse(BaseModel):
 
 @app.post("/cluster", response_model=ClusterResponse)
 def cluster(payload: ClusterRequest):
+    # استيراد كسول: scikit-learn (ومعها scipy) بتاخد ~150MB ذاكرة وقت
+    # الاستيراد، و/cluster بينستدعى مرّة كل فترة من سكربت offline بس —
+    # ما في داعي ندفع التكلفة دايمًا بخدمة سقفها 512MB.
+    from sklearn.cluster import KMeans
+
     X = np.array(payload.vectors)
     km = KMeans(n_clusters=payload.k, random_state=42, n_init=10)
     labels = km.fit_predict(X)

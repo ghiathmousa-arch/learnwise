@@ -86,16 +86,25 @@ async function main() {
   }
 
   console.log("Reassigning clusterId for every content item based on real similarity...");
+  // منجمّع العناصر حسب التجمّع ومنعمل updateMany لكل تجمّع: ٨ عبارات بدل
+  // عبارة لكل عنصر. مع قاعدة بيانات بعيدة، الفرق بين ٨ رحلات شبكة و١٨٩
+  // هو الفرق بين ثانية ومعاملة بتتخطى مهلتها.
+  const idsByCluster = new Map<number, number[]>();
+  content.forEach((c, idx) => {
+    const clusterIdx = matchedClusterIndexForKMeansGroup[labels[idx]];
+    const newClusterId = clusters[clusterIdx].id;
+    const bucket = idsByCluster.get(newClusterId);
+    if (bucket) bucket.push(c.id);
+    else idsByCluster.set(newClusterId, [c.id]);
+  });
+
   await prisma.$transaction(
-    content.map((c, idx) => {
-      const kmeansGroup = labels[idx];
-      const clusterIdx = matchedClusterIndexForKMeansGroup[kmeansGroup];
-      const newClusterId = clusters[clusterIdx].id;
-      return prisma.content.update({
-        where: { id: c.id },
-        data: { clusterId: newClusterId },
-      });
-    }),
+    [...idsByCluster].map(([clusterId, ids]) =>
+      prisma.content.updateMany({
+        where: { id: { in: ids } },
+        data: { clusterId },
+      }),
+    ),
   );
 
   const counts = await prisma.content.groupBy({

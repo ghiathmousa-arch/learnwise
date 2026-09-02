@@ -3,22 +3,32 @@
 // بسيط بيعيد حساب المتجه لكل هيك حساب، باستخدام نفس تفضيلاته المحفوظة
 // أصلاً (بدون ما يغيّرها).
 //
+// مع --all بيعيد الحساب لكل مين عندو تفضيلات، مو بس يلي متجهو فاضي —
+// بيلزم لما يتبدّل الموديل نفسو، لأنو متجهات الموديل القديم ما بتتقارن
+// بمتجهات الجديد (لازم كل الفضاء ينبنى بنفس الموديل).
+//
 // لازم خدمة الذكاء تكون شغالة على localhost:8000 قبل التشغيل.
-// تشغيل: npx tsx scripts/backfill-user-embeddings.ts
+// تشغيل: npx tsx scripts/backfill-user-embeddings.ts [--all]
 
 import "dotenv/config";
 import { prisma } from "../lib/prisma";
 import { Prisma } from "../app/generated/prisma/client";
 import { savePreferences, type Level, type Goal, type Style, type Pace } from "../lib/preferences";
 
+const recomputeAll = process.argv.includes("--all");
+
 async function main() {
   const users = await prisma.user.findMany({
     where: {
       level: { not: null },
-      OR: [
-        { initialEmbedding: { equals: Prisma.AnyNull } },
-        { currentEmbedding: { equals: Prisma.AnyNull } },
-      ],
+      ...(recomputeAll
+        ? {}
+        : {
+            OR: [
+              { initialEmbedding: { equals: Prisma.AnyNull } },
+              { currentEmbedding: { equals: Prisma.AnyNull } },
+            ],
+          }),
     },
     select: {
       id: true,
@@ -32,7 +42,11 @@ async function main() {
     },
   });
 
-  console.log(`Found ${users.length} user(s) needing a backfilled embedding.`);
+  console.log(
+    recomputeAll
+      ? `Recomputing embeddings for ${users.length} user(s).`
+      : `Found ${users.length} user(s) needing a backfilled embedding.`,
+  );
 
   for (const u of users) {
     if (u.clusters.length === 0) {

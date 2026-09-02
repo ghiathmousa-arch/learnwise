@@ -4,21 +4,12 @@
 import "dotenv/config";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../app/generated/prisma/client";
+import { prisma } from "../lib/prisma";
 import { TABLES } from "./db-tables";
-
-const connectionString = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
-if (!connectionString) {
-  console.error("لازم تحطّي DATABASE_URL (أو DIRECT_URL) بملف .env");
-  process.exit(1);
-}
 
 const shouldReset = process.argv.includes("--reset");
 const inPath = path.join("prisma", "data", "export.json");
 const dump = JSON.parse(readFileSync(inPath, "utf8")) as Record<string, Record<string, unknown>[]>;
-
-const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
 async function main() {
   if (shouldReset) {
