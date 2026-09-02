@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // خدمة Python منفصلة كليًا — بيئتها الافتراضية (venv) فيها ملفات JS
+    // مجمّعة جوا مكتباتها (زي أدوات torch) ما إلها علاقة بمشروعنا.
+    "ai-service/**",
   ]),
 ]);
 

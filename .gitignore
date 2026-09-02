@@ -32,6 +32,14 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# prisma
+/app/generated/prisma
+/dev.db
+/dev.db-journal
+# تصدير قاعدة البيانات — فيه إيميلات حقيقية و password hashes، ما بينرفع
+/prisma/data/
 
 # vercel
 .vercel
@@ -39,3 +47,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# python (ai-service)
+ai-service/venv/
+ai-service/**/__pycache__/
+# أوزان الموديل (~120MB) — بتتنزّل بـ download_model.py وقت الـ build
+ai-service/models/
+
+# ملفات شغل محلية/شخصية — ما بتنرفع
+/ui ux LearnWise.zip
+/دليل-التثبيت.md
+/scripts/export-for-friend.ps1
+.vscode/
+# مخرجات مولّدة من test_comprehensive.py
+/ai-service/test_report.json
+/thesis-screenshots/_raw/
+/thesis-screenshots/*.zip

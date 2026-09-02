@@ -1,0 +1,125 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                   Int      @id @default(autoincrement())
+  name                 String
+  email                String   @unique
+  passwordHash         String
+  avatarUrl            String?
+  level                String?
+  learningGoal         String?
+  learningStyle        String?
+  weeklyTime           String?
+  preferredContentType String?
+  initialEmbedding     Json?
+  currentEmbedding     Json?
+  createdAt            DateTime @default(now())
+
+  clusters         UserCluster[]
+  viewHistory      ViewHistory[]
+  searchHistory    SearchHistory[]
+  loginLogs        LoginLog[]
+  suggestedDomains SuggestedDomain[]
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Content {
+  id              Int      @id @default(autoincrement())
+  title           String
+  description     String
+  type            String
+  source          String
+  url             String   @unique
+  thumbnailUrl    String?
+  embedding       Json?
+  difficultyLevel String
+  durationMinutes Int
+  clusterId       Int?
+  createdAt       DateTime @default(now())
+
+  cluster     Cluster?      @relation(fields: [clusterId], references: [id])
+  viewHistory ViewHistory[]
+}
+
+model Cluster {
+  id                Int     @id @default(autoincrement())
+  label             String  @unique
+  centroidEmbedding Json?
+
+  contents Content[]
+  users    UserCluster[]
+}
+
+model UserCluster {
+  userId    Int
+  clusterId Int
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cluster Cluster @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+
+  @@id([userId, clusterId])
+}
+
+model ViewHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  contentId Int
+  viewedAt  DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+}
+
+model SearchHistory {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  queryText  String
+  searchedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LoginLog {
+  id      Int      @id @default(autoincrement())
+  userId  Int
+  loginAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SuggestedDomain {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  domainName  String
+  description String
+  submittedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ContactMessage {
+  id          Int      @id @default(autoincrement())
+  senderName  String
+  senderEmail String
+  message     String
+  isRead      Boolean  @default(false)
+  submittedAt DateTime @default(now())
+}

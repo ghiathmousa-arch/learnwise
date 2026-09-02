@@ -1,0 +1,10 @@
+# المكتبات المطلوبة لخدمة الذكاء.
+# ملاحظة: ما في torch ولا sentence-transformers — الموديل بينشغل بـ ONNX
+# مباشرة، يلي بيوفّر ~450MB ذاكرة و~2GB مساحة تثبيت.
+fastapi
+uvicorn[standard]
+onnxruntime
+tokenizers
+numpy
+scikit-learn
+httpx

@@ -1,0 +1,18 @@
+# Render Blueprint — خدمة الذكاء (FastAPI + ONNX Runtime).
+# التطبيق نفسه (Next.js) بينرفع على Vercel، مو هون.
+services:
+  - type: web
+    name: learnwise-ai
+    runtime: python
+    plan: free
+    rootDir: ai-service
+    # download_model.py بينزّل أوزان ONNX المكمّمة (~120MB) وقت الـ build،
+    # لأنها أكبر من حد GitHub للملف الواحد فما منخزّنها بالريبو.
+    buildCommand: pip install -r requirements.txt && python download_model.py
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /health
+    envVars:
+      # onnxruntime عندو wheels جاهزة لـ 3.12 — منثبّت النسخة حتى ما
+      # يتفاجأ الـ build بترقية بايثون على Render.
+      - key: PYTHON_VERSION
+        value: "3.12.7"
