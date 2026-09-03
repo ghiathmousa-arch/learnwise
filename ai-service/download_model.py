@@ -22,8 +22,9 @@ FILES = [
     "config.json",
     "sentence_bert_config.json",
     "1_Pooling/config.json",
-    "tokenizer.json",
-    "tokenizer_config.json",
+    # مُرمِّز SentencePiece (٥MB) بدل tokenizer.json (١٧MB) — نفس الترميز
+    # بذاكرة أقل بكتير وقت التشغيل.
+    "sentencepiece.bpe.model",
     "special_tokens_map.json",
     # الأوزان المكمّمة int8 — هي لحالها يلي بتنشغل وقت التشغيل.
     "onnx/model_qint8_avx512.onnx",

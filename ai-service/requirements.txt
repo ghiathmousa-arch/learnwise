@@ -2,9 +2,11 @@
 # ملاحظة: ما في torch ولا sentence-transformers — الموديل بينشغل بـ ONNX
 # مباشرة، يلي بيوفّر ~450MB ذاكرة و~2GB مساحة تثبيت.
 fastapi
-uvicorn[standard]
+# بدون [standard]: uvloop/httptools/watchfiles بتزيد الذاكرة بلا فايدة
+# لخدمة بطلب واحد بالمرّة
+uvicorn
 onnxruntime
-tokenizers
+sentencepiece
 numpy
 scikit-learn
 httpx

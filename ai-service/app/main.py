@@ -12,7 +12,10 @@
   * السرعة: onnxruntime أسرع من torch على CPU بلا تسريع عتادي.
   * صفر طلبات شبكة وقت التشغيل — نفس متطلب العمل بدون إنترنت (الجزء 13).
 
-فرق التكميم على نتائج التشابه مهمل (ارتباط > 0.99 مع نسخة fp32).
+التكميم بيزحزح المتجهات ~0.93 تشابه جيبي عن نسخة fp32، بس التطابق
+بأقرب الجيران بيضل 88% لأعلى ٥ و90% لأعلى ١٠ — وهاد يلي بيهم التوصية.
+المهم إنو كل المتجهات المخزّنة (محتوى، مراكز، مستخدمين) محسوبة بنفس
+الموديل، لأنو متجهات fp32 وint8 ما بتتقارن ببعض.
 """
 
 from contextlib import asynccontextmanager
@@ -22,29 +25,40 @@ import numpy as np
 import onnxruntime as ort
 from fastapi import FastAPI
 from pydantic import BaseModel
-from tokenizers import Tokenizer
+import sentencepiece as spm
 
 MODEL_DIR = Path(__file__).resolve().parent.parent / "models" / "paraphrase-multilingual-MiniLM-L12-v2"
 ONNX_PATH = MODEL_DIR / "onnx" / "model_qint8_avx512.onnx"
-TOKENIZER_PATH = MODEL_DIR / "tokenizer.json"
+TOKENIZER_PATH = MODEL_DIR / "sentencepiece.bpe.model"
 
 MAX_SEQ_LENGTH = 128  # من sentence_bert_config.json
-PAD_TOKEN_ID = 1  # <pad> بـ XLM-RoBERTa
+
+# XLM-RoBERTa بيستعمل قاموس fairseq فوق قاموس SentencePiece: أول أربع
+# خانات محجوزة للرموز الخاصة، وباقي الرموز بتنزاح بواحد. الرمز يلي رقمو 0
+# عند SentencePiece هو <unk> وبينعكس على 3.
+BOS_ID, PAD_ID, EOS_ID, UNK_ID = 0, 1, 2, 3
+FAIRSEQ_OFFSET = 1
 
 session: ort.InferenceSession | None = None
-tokenizer: Tokenizer | None = None
+tokenizer: spm.SentencePieceProcessor | None = None
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     global session, tokenizer
 
-    tokenizer = Tokenizer.from_file(str(TOKENIZER_PATH))
-    tokenizer.enable_truncation(max_length=MAX_SEQ_LENGTH)
-    tokenizer.enable_padding(pad_id=PAD_TOKEN_ID, pad_token="<pad>")
+    # منستعمل SentencePiece مباشرة مو مكتبة tokenizers: نفس الترميز بالضبط
+    # (تحقّقنا رمز برمز)، بس tokenizers بتفك ملف tokenizer.json — ٢٥٠ ألف
+    # رمز — لبنية بتاخد ~٢٥٠MB بالذاكرة، وهي لحالها كانت بتوقّعنا بـ OOM
+    # على حاوية ٥١٢MB. ملف SentencePiece بياخد جزء صغير من هيك.
+    tokenizer = spm.SentencePieceProcessor(model_file=str(TOKENIZER_PATH))
 
-    # خيط واحد: الخطة المجانية بتعطي جزء من نواة، وكل خيط زيادة بياخد ذاكرة
-    # بلا فايدة. وبنطفي الـ arena حتى الذاكرة ترجع للنظام بعد كل طلب.
+    # خيط واحد: الخطة المجانية بتعطي جزء من نواة، وكل خيط زيادة بياخد
+    # ذاكرة بلا فايدة. والـ arena مطفي حتى الذاكرة ترجع للنظام بعد كل طلب.
+    #
+    # جرّبنا كمان نطفي تحسين الرسم البياني والـ prepacking لتوفير ذاكرة:
+    # ما وفّروا ولا ميغابايت (الاستهلاك كان كلو من المُرمِّز)، وبالمقابل
+    # بدّلوا نوى الحساب فطلعت متجهات تختلف ~0.012 عن المخزّنة. فرجعناهن.
     options = ort.SessionOptions()
     options.intra_op_num_threads = 1
     options.inter_op_num_threads = 1
@@ -76,9 +90,17 @@ def encode(texts: list[str]) -> np.ndarray:
     """بيرجع متجهات مُطبّعة (L2) بنفس ما كان بيعمل sentence-transformers."""
     assert session is not None and tokenizer is not None
 
-    encodings = tokenizer.encode_batch(texts)
-    input_ids = np.array([e.ids for e in encodings], dtype=np.int64)
-    attention_mask = np.array([e.attention_mask for e in encodings], dtype=np.int64)
+    sequences = []
+    for piece_ids in tokenizer.encode(texts, out_type=int):
+        body = [p + FAIRSEQ_OFFSET if p else UNK_ID for p in piece_ids]
+        sequences.append([BOS_ID] + body[: MAX_SEQ_LENGTH - 2] + [EOS_ID])
+
+    width = max(len(seq) for seq in sequences)
+    input_ids = np.full((len(sequences), width), PAD_ID, dtype=np.int64)
+    attention_mask = np.zeros((len(sequences), width), dtype=np.int64)
+    for row, seq in enumerate(sequences):
+        input_ids[row, : len(seq)] = seq
+        attention_mask[row, : len(seq)] = 1
 
     feed = {"input_ids": input_ids, "attention_mask": attention_mask}
     # بعض نسخ الموديل بتتوقّع token_type_ids كمان — منمرّرو بس إذا طلبو.
