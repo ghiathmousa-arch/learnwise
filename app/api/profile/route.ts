@@ -10,6 +10,11 @@ import {
   savePreferences,
 } from "@/lib/preferences";
 
+// خدمة الذكاء على Render (الخطة المجانية) بتنام مع الخمول، وأول طلب بيوقظها
+// بياخد ~٣٥ ثانية. سقف Vercel الافتراضي عشر ثواني بيقطع الطلب قبل هيك،
+// فمنرفعو للحد الأقصى المسموح بالخطة المجانية.
+export const maxDuration = 60
+
 export async function PATCH(request: Request) {
   const session = await getSession();
   if (!session) {

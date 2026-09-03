@@ -8,7 +8,7 @@ Built as a full-stack Next.js 16 application with a separate Python inference se
 
 | | |
 |---|---|
-| **Live demo** | _to be added after deployment_ |
+| **Live demo** | **[learnwise-six.vercel.app](https://learnwise-six.vercel.app)** — the inference service runs on a free Render instance that sleeps when idle, so the first request after a pause takes ~35 s to wake it |
 | **Stack** | Next.js 16 · React 19 · TypeScript · Prisma 7 · PostgreSQL · FastAPI · ONNX Runtime |
 | **Corpus** | 189 curated items (YouTube + Dev.to) across 8 auto-discovered topics |
 

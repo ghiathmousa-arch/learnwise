@@ -2,8 +2,8 @@
 // مستقلة (scripts/*.ts) برّا Next.js نفسو، ومكتبة server-only بترمي خطأ
 // بأي سياق مش جوا build الخاص بـ Next.
 
-// عنوان خدمة الذكاء المحلية (FastAPI). ما بنحطها بمتغيّر بيئة معقّد لأنها
-// دايمًا محلية وثابتة — نفس الجهاز، بورت ثابت.
+// عنوان خدمة الذكاء (FastAPI). بالإنتاج بينحط بمتغيّر البيئة AI_SERVICE_URL
+// وبيشاور على الخدمة المنشورة على Render؛ محليًا منرجع للبورت الافتراضي.
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL ?? "http://localhost:8000";
 
 export async function embedTexts(texts: string[]): Promise<number[][]> {
