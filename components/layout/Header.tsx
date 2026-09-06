@@ -17,16 +17,16 @@ export default async function Header() {
   const user = await getCurrentUser();
 
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between gap-10 border-b border-line bg-white px-6 py-3.5 md:px-16">
+    <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-line bg-white px-4 py-3.5 sm:gap-10 sm:px-6 md:px-16">
       <div className="flex items-center gap-11">
-        <Link href="/" className="flex items-center">
+        <Link href="/" className="flex shrink-0 items-center">
           <Image
             src="/learnwise-logo.png"
             alt="LearnWise"
             width={1162}
             height={319}
             priority
-            className="h-10 w-auto"
+            className="h-8 w-auto max-w-none md:h-10"
           />
         </Link>
         <nav className="hidden items-center gap-7 text-[15px] lg:flex">
@@ -41,12 +41,12 @@ export default async function Header() {
           ))}
         </nav>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex shrink-0 items-center gap-3 sm:gap-4">
         {user ? (
           <>
             <Link
               href="/profile"
-              className="text-[15px] font-medium text-ink hover:text-teal"
+              className="max-w-28 truncate text-[15px] font-medium text-ink hover:text-teal sm:max-w-none"
             >
               {user.name}
             </Link>
@@ -56,11 +56,16 @@ export default async function Header() {
           <>
             <Link
               href="/login"
-              className="text-[15px] text-body hover:text-teal"
+              className="hidden text-[15px] text-body hover:text-teal min-[380px]:block"
             >
               تسجيل الدخول
             </Link>
-            <Button href="/register">إنشاء حساب</Button>
+            <Button
+              href="/register"
+              className="max-sm:px-4 max-sm:py-2.5 max-sm:text-sm"
+            >
+              إنشاء حساب
+            </Button>
           </>
         )}
       </div>

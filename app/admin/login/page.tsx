@@ -13,8 +13,8 @@ export default async function AdminLoginPage() {
       <Image
         src="/learnwise-logo-white.png"
         alt="LearnWise"
-        width={1162}
-        height={319}
+        width={1136}
+        height={292}
         priority
         className="h-9 w-auto"
       />

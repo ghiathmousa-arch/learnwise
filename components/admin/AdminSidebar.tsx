@@ -36,8 +36,8 @@ export default function AdminSidebar({
       <Image
         src="/learnwise-logo-white.png"
         alt="LearnWise"
-        width={1162}
-        height={319}
+        width={1136}
+        height={292}
         className="mb-6 h-6.5 w-auto px-1.5"
       />
 
